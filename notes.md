@@ -122,3 +122,154 @@ Database Migrations:
 - the down is incredibly important to have a way to save us if something goes wrong.
 
 npm run build
+npx typeorm migration:run
+npx typeorm migration:revert
+
+---
+
+Dependency Injection"
+
+1. in our CoffeeService, the @Injectable() decorator declared a class that can be managed by the Nest "container". Marks the coffeeService as a provider.
+2. In CoffeesController -- we are requesting the CoffeesService in the constructor. This tellsNest to "inject" the provider into our controller class so that we may be able to utilize it.
+3. Nest is aware that -this- class is also a "Provider" because we've included in our coffeesModule, which registers this provider with the Nest Inversion of Control (IoC) container.
+
+When the Nest container instantiates the CoffeesController, it first looks to see if there are any dependencies needed. In our case, there is one, the "CoffeesService". When the Nest container finds the CoffeeService dependency, it performs a lookup on the CoffeeService token which returns the CoffeeService class. Assuming this Provider has a "singleton" scope, which is the default behavior of injectable providers, Nest will then either _create an instance_ of CoffeeService, cache it and return it or if one is already cached, it will return _that_ existing instance.
+
+---
+
+Value based Providers:
+useValue syntax is useful for injecting a constant value.
+Say you wanted ti add an external library into the Nest container, or maybe we are replacing a real implementation of a Service with a Mock object.
+providers: [{ provide: CoffeesService, useValue: new MockCoffeesService() }],
+
+---
+
+useClass allows us to dynamically dertermine a Class that a token should resolve to.
+
+- like when we need production vs dev
+  // "useClass" syntax example
+  {
+  provide: ConfigService,
+  useClass:
+  process.env.NODE_ENV === 'development'
+  ? DevelopmentConfigService
+  : ProductionConfigService,
+  },
+
+  ***
+
+  useFactory: allows us to create providers "dynamically" which can extremely useful if you need to base the provider's value on various other dependencies, values, etc.
+
+  - The value returned from the factory function is what will be user by the provider token. What makes these factory functions so specifal, is that they themselces can inject OTHER providers need to compute the returning value.
+
+  In module"
+  @injectable()
+  export class CoffeeBrandsFactory {
+  create() {
+  return ['buddy brew', 'nescafe']
+  }
+  }
+
+  blah....
+  providers: [
+  CoffeesService,
+  CoffeeBrandsFactory,
+  { provide: COFFEE_BRANDS,
+  useFactory: (brandsFactory: CoffeeBrandsFactory)=> brandsFactory.create(),
+  inject: [CoffeeBrandsFactory]
+  }]
+
+  ***
+
+  prevent race conditions by leveraging Async Providers using useFactory.
+
+  {
+  provide: 'COFFEE_BRANDS',
+  // Note "async" here, and Promise/Async event inside the Factory function
+  // Could be a database connection / API call / etc
+  // In our case we're just "mocking" this type of event with a Promise
+  useFactory: async (connection: Connection): Promise<string[]> => {
+  // const coffeeBrands = await connection.query('SELECT \* ...');
+  const coffeeBrands = await Promise.resolve(['buddy brew', 'nescafe'])
+  return coffeeBrands;
+  },
+
+---
+
+Static Modules (the ones we've been using) can't have their providers be configured by a module that is module that is consuming it.
+
+---
+
+Every Nest provider is a singleton.
+Example: when we use @Injectable() in our CoffeeService, it is really shorthand implementation for passing it on object with scopt and Scope.DEFAULT.
+
+Once our application has bootstrapped, all the Singleton providers have been instantiated.
+
+// Scope DEFAULT - This is assumed when NO Scope is entered like so: @Injectable() \*/
+@Injectable({ scope: Scope.DEFAULT })
+export class CoffeesService {}
+
+// -------------
+
+/\*\*
+
+- Scope TRANSIENT
+
+- Transient providers are NOT shared across consumers.
+- Each consumer that injects a transient provider
+- will receive a new, dedicated instance of that provider.
+- if we console.log, we see instantiated twice (bc use twice.)
+  \*/
+  @Injectable({ scope: Scope.TRANSIENT })
+  export class CoffeesService {}
+
+// Scope TRANSIENT with a Custom Provider
+{
+provide: 'COFFEE_BRANDS',
+useFactory: () => ['buddy brew', 'nescafe'],
+scope: Scope.TRANSIENT // 👈
+}
+
+// -------------
+
+/\*\*
+
+- Scope REQUEST
+
+- Request scope provides a new instance of the provider
+- exclusively for each incoming request.
+- won't console.log that instantiated until request (unlike transiate and singleton)
+  \*/
+  @Injectable({ scope: Scope.REQUEST })
+  export class CoffeesService {}
+  ***
+  What parameter decorator is needed to inject a custom provider into a class? Inject()
+
+The "useValue" syntax (custom providers) is useful when..
+
+1. want to bind an external library into the nest container
+2. want to register and inject a constant value
+3. want to replace a real implementation with a serivice with a mock object
+
+Custom providers are useful when..
+
+1. creating custom instances of our provider instead of having nest instatiate the class for us
+2. want to use a strategy pattern in which we can provide an abstract class and interchange the real implementation
+3. we need to delay the bootstrap process until one or more async tasks gave completed.
+
+What decorator is required to declare a class that can be managed by the Nest container? Injectable()
+
+The "useClass" syntax (custom providers) is useful when we want to... Dynamically determine a class that a token should resolve to
+
+The "useFactory" syntax (custom providers) is useful when we want to...create providers dynamically based on other providers OR delay the entire bootstrap process until 1+ async tasks have completed.
+
+What Provider's scopes does Nest support? Singleton, Transient, Request.
+
+---
+
+All env variables are string by default
+the configservice will not perform any type casting or parsing here.
+
+---
+
+TypeOrmModule.forRootAsync makes sure this is loaded after all other modules --> so won't accidently come back undefined.
