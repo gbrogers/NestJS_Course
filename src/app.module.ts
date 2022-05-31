@@ -6,8 +6,8 @@ import { CoffeesModule } from './coffees/coffees.module'
 import { CoffeeRatingModule } from './coffee-rating/coffee-rating.module'
 import { DatabaseModule } from './database/database.module'
 import { ConfigModule } from '@nestjs/config'
-import * as Joi from '@hapi/joi'
 import appConfig from './config/app.config'
+import { CommonModule } from './common/common.module'
 
 @Module({
   imports: [
@@ -33,6 +33,7 @@ import appConfig from './config/app.config'
     }),
     CoffeeRatingModule,
     DatabaseModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [AppService],

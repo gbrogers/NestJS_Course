@@ -273,3 +273,52 @@ the configservice will not perform any type casting or parsing here.
 ---
 
 TypeOrmModule.forRootAsync makes sure this is loaded after all other modules --> so won't accidently come back undefined.
+
+---
+
+In NestJS, we have 4 additional building blocks (for features), that we haven’t showcased yet - these are:
+
+Exception filters: handling and processing unhandles exceptions that might happen in app. Let us control exact flow and content of responses.
+Pipes: used to handle two things - transformations (transform input data) & validation
+Guards: determine whether a given response meets certain conditions, like authentication, authorization, roles, ACLs, etc.
+& Interceptors: 1. bind extra logic, before or after method execution. 2. transform the reesult returned from a method. 3. extend basic method behavior. 4. completely override a method, depending on specific conditions (ie caching.)
+
+Interceptors make it possible for us to:
+bind extra logic before or after method execution
+transform the result returned from a method
+transform the exception thrown from a method
+extend basic method behavior
+or even completely overriding a method - depending on a specific condition (for example: doing something like caching various responses)
+
+- analytics could be added when manipulating!
+
+Another technique useful for Interceptors is to extend the basic function behavior by applying RxJS operators to the response stream.
+
+To help us learn about this concept by example - let’s imagine that we need to handle timeouts for all of our route requests.
+
+When an endpoint does not return anything after a certain period of time, we need to terminate the request, and send back an error message.
+
+---
+
+Pipes have two typical use cases:
+Transformation: where we transform input data to the desired output
+& validation: where we evaluate input data and if valid, simply pass it through unchanged. If the data is NOT valid - we want to throw an exception.
+In both cases, pipes operate on the arguments being processed by a controller’s route handler.
+
+NestJS triggers a pipe just before a method is invoked.
+
+Pipes also receive the arguments meant to be passed on to the method. Any transformation or validation operation takes place at this time - afterwards the route handler is invoked with any (potentially) transformed arguments.
+
+---
+
+Middleware functions have access to the request and response objects, and are not specifically tied to any method, but rather to a specified route PATH.
+
+Middleware functions can perform the following tasks:
+
+executing code
+making changes to the request and the response objects.
+ending the request-response cycle.
+Or even calling the next middleware function in the call stack.
+When working with middleware, if the current middleware function does not END the request-response cycle, it must call the next() method, which passes control to the next middleware function.
+
+Otherwise, the request will be left hanging - and never complete.
