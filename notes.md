@@ -322,3 +322,49 @@ Or even calling the next middleware function in the call stack.
 When working with middleware, if the current middleware function does not END the request-response cycle, it must call the next() method, which passes control to the next middleware function.
 
 Otherwise, the request will be left hanging - and never complete.
+
+---
+
+One of the best ways to document our application is to use the OpenAPI specification. The OpenAPI specification is a language-agnostic definition format used to describe RESTful APIs.
+
+An OpenAPI document allows us to describe our entire API, including:
+
+Available operations (endpoints)
+Operation parameters: Input and output for each operation
+Authentication methods
+Contact information, license, terms of use and other information.
+… and much more ...
+
+Swagger tag allow us to break down out reseaources into a "logical bounded context", making it much easier navigate through swagger ui
+
+/\*\*
+
+- Swagger Tags decorator.
+- 💡 Note: Can also be done on an individual method-level if needed as well!
+  \*/
+  @ApiTags('coffees')
+  class CoffeesController {}
+
+---
+
+// For unit tests
+npm run test
+
+// For unit tests + collecting testing coverage
+npm run test:cov
+
+// For e2e tests
+npm run test:e2e
+
+Unit Tests
+For unit tests In NestJS, it’s a common practice to keep the spec files in the same folder as the application source code files that they test.
+
+Each controller, provider, service, etc. should have its own dedicated test file. The test file extension must be (dot).spec.ts (this is so that integrated test tooling can identify it as a test file with test suites).
+
+End-to-End (e2e) Tests
+For e2e tests, these files are typically located in a dedicated `test` directory by default. e2e tests are typically grouped into separate files by the feature or functionality that they test. The file extension must be (dot).e2e-spec.ts.
+
+How are they different?
+While unit tests focus on individual classes and functions…
+
+e2e tests are great for high-level validation of the entire system. e2e testing covers the interaction of classes and modules at a more aggregate level -- closer to the kind of interaction that end-users will have with the production system.
